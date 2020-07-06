@@ -126,6 +126,8 @@ public class ExcelParser {
             if (key.startsWith(SIGN_HIDDEN_CELL_PREFIX))
                 continue;
 
+
+
             ParsedCellType type = parsedSheet.getType( index );
 
             // Null cell handler
@@ -301,9 +303,38 @@ public class ExcelParser {
                 default:
                     throw new IllegalArgumentException("Unsupported type " + type + " found.");
             }
+            if (key.contains("."))
+            {
+                Object value= (Object) jsonRow.get(key);
+                jsonRow.remove(key);
+                recurseCreateMaps(jsonRow,key,value);
 
+            }
         }
         return jsonRow;
+    }
+
+    static void recurseCreateMaps(JSONObject currentMap, String key, Object value) {
+        if (key.contains(".")) {
+            String currentKey = key.split("\\.")[0];
+
+            JSONObject  deeperMap;
+
+
+
+            if (currentMap.has(currentKey)) {
+                deeperMap = (JSONObject) currentMap.get(currentKey);
+
+            } else {
+
+                deeperMap = new JSONObject();
+                currentMap.put(currentKey, deeperMap);
+            }
+
+            recurseCreateMaps(deeperMap, key.substring(key.indexOf('.') + 1), value);
+        } else {
+            currentMap.put(key, value);
+        }
     }
 
     private static String getCellStringValue(Cell cell) {
